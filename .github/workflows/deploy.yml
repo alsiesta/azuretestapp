@@ -17,12 +17,14 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Build and push Docker image
-      run: |
-        docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/my-app:${{ github.sha }} .
-        echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_NAME }}.azurecr.io -u ${{ secrets.ACR_USERNAME }} --password-stdin
-        docker push ${{ secrets.ACR_NAME }}.azurecr.io/my-app:${{ github.sha }}
+    - name: Build Docker image
+      run: docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/my-app:${{ github.sha }} .
+
+    - name: Login to Azure Container Registry
+      run: echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_NAME }}.azurecr.io -u ${{ secrets.ACR_USERNAME }} --password-stdin
+
+    - name: Push Docker image to ACR
+      run: docker push ${{ secrets.ACR_NAME }}.azurecr.io/my-app:${{ github.sha }}
 
     - name: Deploy to Azure Web App
-      run: |
-        az webapp config container set --name ${{ secrets.AZURE_WEBAPP_NAME }} --resource-group myResourceGroup --docker-custom-image-name ${{ secrets.ACR_NAME }}.azurecr.io/my-app:${{ github.sha }}
+      run: az webapp config container set --name ${{ secrets.AZURE_WEBAPP_NAME }} --resource-group myResourceGroup --docker-custom-image-name ${{ secrets.ACR_NAME }}.azurecr.io/my-app:${{ github.sha }}
